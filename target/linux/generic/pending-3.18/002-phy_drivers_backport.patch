@@ -154,14 +154,17 @@
  			goto found;
  
  	priv = ar8xxx_create();
-@@ -2194,7 +2194,7 @@ ar8xxx_phy_probe(struct phy_device *phyd
+@@ -2193,7 +2193,7 @@ ar8xxx_phy_probe(struct phy_device *phydev)
+		ret = -ENOMEM;
  		goto unlock;
  	}
  
 -	priv->mii_bus = phydev->mdio.bus;
 +	priv->mii_bus = phydev->bus;
- 
- 	ret = ar8xxx_probe_switch(priv);
+	priv->pdev = &phydev->mdio.dev;
+
+ 	ret = of_property_read_u32(priv->pdev->of_node, "qca,mib-poll-interval",
+				   &priv->mib_poll_interval);
  	if (ret)
 @@ -2215,7 +2215,7 @@ ar8xxx_phy_probe(struct phy_device *phyd
  found:
@@ -190,6 +193,7 @@
 -		.read_status	= ar8xxx_phy_read_status,
 -		.soft_reset	= ar8xxx_phy_soft_reset,
 -	}
+-};
 +static struct phy_driver ar8xxx_phy_driver = {
 +	.phy_id		= 0x004d0000,
 +	.name		= "Atheros AR8216/AR8236/AR8316",
@@ -203,7 +207,7 @@
 +	.read_status	= ar8xxx_phy_read_status,
 +	.soft_reset	= ar8xxx_phy_soft_reset,
 +	.driver		= { .owner = THIS_MODULE },
- };
++};
  
 -module_phy_driver(ar8xxx_phy_driver);
 +int __init
@@ -223,12 +227,12 @@
  MODULE_LICENSE("GPL");
 --- a/drivers/net/phy/ar8327.c
 +++ b/drivers/net/phy/ar8327.c
-@@ -662,11 +662,11 @@ ar8327_hw_init(struct ar8xxx_priv *priv)
+@@ -662,7 +662,7 @@ ar8327_hw_init(struct ar8xxx_priv *priv)
  	if (!priv->chip_data)
  		return -ENOMEM;
  
--	if (priv->phy->mdio.dev.of_node)
--		ret = ar8327_hw_config_of(priv, priv->phy->mdio.dev.of_node);
+-	if (priv->pdev->of_node)
+-		ret = ar8327_hw_config_of(priv, priv->pdev->of_node);
 +	if (priv->phy->dev.of_node)
 +		ret = ar8327_hw_config_of(priv, priv->phy->dev.of_node);
  	else
